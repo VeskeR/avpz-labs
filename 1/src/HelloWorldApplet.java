@@ -5,7 +5,13 @@ import java.applet.*;
 import java.awt.*;
 
 public class HelloWorldApplet extends Applet {
+    private String msg;
+
+    public void init() {
+        msg = "Hello World! It's my first Java Applet application. © Andrey Bulat";
+    }
+
     public void paint(Graphics g) {
-        g.drawString("Hello world! It's my first Java Applet application!", 25, 50);
+        g.drawString(msg, 25, 50);
     }
 }
