@@ -17,7 +17,7 @@ public class ClientApplet extends Applet {
     private Button connectBtn = new Button("Connect");
     private Button quitBtn = new Button("Quit");
 
-    private String serverName = "localhost";
+    private String serverName = "127.0.0.1";
     private int serverPort = 9000;
 
     public void init() {
@@ -88,7 +88,7 @@ public class ClientApplet extends Applet {
             this.quitBtn.setEnabled(true);
         } catch (UnknownHostException e) {
             this.print("Host unknown: " + e.getMessage());
-        } catch (IOException e) {
+        } catch (Exception e) {
             this.print("Unexpected exception: " + e.getMessage());
         }
     }
