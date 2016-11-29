@@ -12,15 +12,21 @@ public class ChatMultiServer {
     private ArrayList<ChatMultiServerThread> clients;
     private int clientCounter = 0;
     private ServerSocket socket;
+    private ChatMultiServerApplet serverApplet;
 
     public static void main(String[] args) throws IOException {
         new ChatMultiServer(9000).start();
     }
 
     public ChatMultiServer(int portNumber) {
+       this(portNumber, null);
+    }
+
+    public ChatMultiServer(int portNumber, ChatMultiServerApplet serverApplet) {
         this.portNumber = portNumber;
         this.clients = new ArrayList<>();
         this.socket = null;
+        this.serverApplet = serverApplet;
     }
 
     public void start() {
@@ -105,6 +111,10 @@ public class ChatMultiServer {
 
     public void print(String message) {
         System.out.println(message);
+
+        if (this.serverApplet != null) {
+            this.serverApplet.print(message);
+        }
     }
 
     public void setPortNumber(int portNumber, boolean force) {

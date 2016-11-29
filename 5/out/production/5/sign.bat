@@ -1,2 +1,2 @@
-jar cvf ChatClientApplet.jar *.class
-jarsigner ChatClientApplet.jar ClientApplet
+jar cvf ChatApplet.jar *.class
+jarsigner ChatApplet.jar ChatApplet
