@@ -37,7 +37,9 @@ public class ChatMultiServerThread extends Thread {
             try {
                 this.server.handle(this.id, this.in.readLine());
             } catch (IOException e) {
-                this.server.print("Client thread " + this.id + " error while reading: " + e.getMessage());
+                if (this.server.isListening()) {
+                    this.server.print("Client thread " + this.id + " error while reading: " + e.getMessage());
+                }
                 this.server.removeClient(this.id);
             }
         }

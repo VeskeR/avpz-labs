@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Created by Andrew on 11/27/2016.
  */
-public class ChatMultiServer {
+public class ChatMultiServer implements Runnable {
     private volatile boolean listening;
     private int portNumber;
     private ArrayList<ChatMultiServerThread> clients;
@@ -15,7 +15,7 @@ public class ChatMultiServer {
     private ChatMultiServerApplet serverApplet;
 
     public static void main(String[] args) throws IOException {
-        new ChatMultiServer(9000).start();
+        new Thread(new ChatMultiServer(9000)).start();
     }
 
     public ChatMultiServer(int portNumber) {
@@ -29,14 +29,14 @@ public class ChatMultiServer {
         this.serverApplet = serverApplet;
     }
 
-    public void start() {
+    public void run() {
         print("Opening chat server listening on port " + portNumber);
 
         try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
             print("Chat server successfully opened at port " + portNumber);
 
             this.socket = serverSocket;
-            this.run();
+            this.listen();
         } catch (IOException e) {
             System.err.println("Could not listen on port " + portNumber);
             System.exit(-1);
@@ -44,16 +44,24 @@ public class ChatMultiServer {
     }
 
     public void stop() {
+        this.print("Trying to stop the chat server ...");
+        this.sendAll("Chat server is closing. Please reconnect later.");
+
         this.listening = false;
-        clientCounter = 0;
-        for (int i = 0; i < clients.size(); i++) {
+        this.clientCounter = 0;
+
+        for (int i = 0; i < this.clients.size(); i++) {
+            sendPrivate("Bye", this.clients.get(i).id);
             this.closeClient(clients.get(i).id);
         }
-        clients = new ArrayList<>();
+
+        this.clients = new ArrayList<>();
 
         try {
             this.socket.close();
             this.socket = null;
+
+            this.print("Chat server has been successfully stopped.");
         } catch (IOException e) {
             this.print("Error closing server socket: " + e.getMessage());
         }
@@ -117,11 +125,13 @@ public class ChatMultiServer {
         }
     }
 
+    public void setPortNumber(int portNumber) {
+        this.setPortNumber(portNumber, false);
+    }
+
     public void setPortNumber(int portNumber, boolean force) {
         if (this.listening && force) {
             this.sendAll("Chat server changed listening port to: " + portNumber + ".");
-            this.sendAll("Chat server is now closing. Please reconnect.");
-
             this.stop();
 
             this.portNumber = portNumber;
@@ -132,18 +142,34 @@ public class ChatMultiServer {
         }
     }
 
+    public void sendAll(String message) {
+        for (int i = 0; i < this.clients.size(); i++) {
+            this.clients.get(i).send(message);
+        }
+    }
+
+    public void sendPrivate(String message, int id) {
+        this.findClient(id).send(message);
+    }
+
+    public boolean isListening() {
+        return this.listening;
+    }
+
     public int getPortNumber() {
         return this.portNumber;
     }
 
-    private void run() {
+    private void listen() {
         this.listening = true;
 
         while (this.listening) {
             try {
                 this.createClient(this.socket.accept());
             } catch (IOException e) {
-                print("Server socket accept error: " + e);
+                if (this.listening) {
+                    print("Server socket accept error: " + e);
+                }
             }
         }
     }
@@ -155,15 +181,5 @@ public class ChatMultiServer {
            }
         }
         return null;
-    }
-
-    private void sendAll(String message) {
-        for (int i = 0; i < this.clients.size(); i++) {
-            this.clients.get(i).send(message);
-        }
-    }
-
-    private void sendPrivate(String message, int id) {
-        this.findClient(id).send(message);
     }
 }
