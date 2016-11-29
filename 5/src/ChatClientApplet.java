@@ -15,12 +15,13 @@ public class ChatClientApplet extends Applet {
 
     private TextArea displayTA = new TextArea();
     private TextField inputTF = new TextField();
+    private TextField portNumberTF = new TextField();
     private Button sendBtn = new Button("Send");
     private Button connectBtn = new Button("Connect");
     private Button quitBtn = new Button("Quit");
 
     private String serverName = "127.0.0.1";
-    private int serverPort = 9000;
+    private int serverPort;
 
     private enum State {
         Idling,
@@ -28,11 +29,14 @@ public class ChatClientApplet extends Applet {
     }
 
     public void init() {
-        // Create panel with 'quit' & 'connect' buttons
+        // Create panel with 'quit', 'connect' buttons & text field for port number input
         Panel keys = new Panel();
-        keys.setLayout(new GridLayout(1, 2));
-        keys.add(this.quitBtn);
+        keys.setLayout(new GridLayout(1, 3));
+        keys.add(this.portNumberTF);
         keys.add(this.connectBtn);
+        keys.add(this.quitBtn);
+
+        portNumberTF.setText("9000");
 
         // Create panel with controls at the bottom of window
         Panel south = new Panel();
@@ -59,7 +63,7 @@ public class ChatClientApplet extends Applet {
             this.inputTF.setText("Bye");
             this.send();
         } else if (e.target == this.connectBtn) {
-            this.connect(serverName, serverPort);
+            this.connect();
         } else if (e.target == this.sendBtn) {
             this.send();
             this.inputTF.requestFocus();
@@ -76,20 +80,33 @@ public class ChatClientApplet extends Applet {
         }
     }
 
-    private void connect(String serverName, int serverPort) {
+    private void connect() {
         this.print("Trying to connect to chat server ...");
+
         try {
-            this.socket = new Socket(serverName, serverPort);
+            this.serverPort = Integer.parseInt(this.portNumberTF.getText());
+            if (this.serverPort < 0 || this.serverPort > 65535) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            this.print("Error while connecting to server: you have to specify correct port number to connect to.");
+            this.serverPort = -1;
+        }
 
-            this.open();
+        if (this.serverPort != -1) {
+            try {
+                this.socket = new Socket(this.serverName, this.serverPort);
 
-            this.print("Successfully connected to server at: " + serverName + ":" + serverPort);
+                this.open();
 
-            this.setState(State.Connected);
-        } catch (UnknownHostException e) {
-            this.print("Host unknown: " + e.getMessage());
-        } catch (Exception e) {
-            this.print("Unexpected exception: " + e.getMessage());
+                this.print("Successfully connected to server at: " + this.serverName + ":" + this.serverPort);
+
+                this.setState(State.Connected);
+            } catch (UnknownHostException e) {
+                this.print("Host unknown: " + e.getMessage());
+            } catch (Exception e) {
+                this.print("Unexpected exception: " + e.getMessage());
+            }
         }
     }
 
@@ -135,21 +152,25 @@ public class ChatClientApplet extends Applet {
         this.setState(State.Idling);
     }
 
-    private void print(String message) {
+    public void print(String message) {
         displayTA.append(message + "\n");
     }
 
     private void setState(State state) {
         switch (state) {
             case Idling:
-                this.sendBtn.setEnabled(false);
+                this.portNumberTF.setEnabled(true);
                 this.connectBtn.setEnabled(true);
                 this.quitBtn.setEnabled(false);
+                this.inputTF.setEnabled(false);
+                this.sendBtn.setEnabled(false);
                 break;
             case Connected:
-                this.sendBtn.setEnabled(true);
+                this.portNumberTF.setEnabled(false);
                 this.connectBtn.setEnabled(false);
                 this.quitBtn.setEnabled(true);
+                this.inputTF.setEnabled(true);
+                this.sendBtn.setEnabled(true);
                 break;
         }
     }

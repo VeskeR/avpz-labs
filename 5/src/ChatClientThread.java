@@ -13,6 +13,8 @@ public class ChatClientThread extends Thread {
     private BufferedReader streamIn;
 
     public ChatClientThread(ChatClientApplet chatClientApplet, Socket socket) {
+        super("ChatClientThread");
+
         this.chatClientApplet = chatClientApplet;
         this.socket = socket;
 
@@ -24,7 +26,7 @@ public class ChatClientThread extends Thread {
         try {
             this.streamIn = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
         } catch (IOException e) {
-            System.out.println("Error getting input stream: " + e.getMessage());
+            chatClientApplet.print("Error getting input stream: " + e.getMessage());
             this.chatClientApplet.stop();
         }
     }
@@ -34,7 +36,7 @@ public class ChatClientThread extends Thread {
             try {
                 this.chatClientApplet.handle(this.streamIn.readLine());
             } catch (IOException e) {
-                System.out.println("Listening error: " + e.getMessage());
+                chatClientApplet.print("Listening error: " + e.getMessage());
                 this.chatClientApplet.closeConnection();
             }
         }
@@ -49,7 +51,7 @@ public class ChatClientThread extends Thread {
                 this.streamIn = null;
             }
         } catch (IOException e) {
-            System.out.println("Error closing input stream: " + e.getMessage());
+            chatClientApplet.print("Error closing input stream: " + e.getMessage());
         }
     }
 }
